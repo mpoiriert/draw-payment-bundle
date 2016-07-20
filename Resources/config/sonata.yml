@@ -1,0 +1,18 @@
+services:
+    admin.draw_payment.order:
+        class: Draw\PaymentBundle\Sonata\OrderAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\Order , ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, label: Order, icon: "<i class='fa fa-usd'></i>" }
+
+    admin.draw_payment.tax_configuration:
+        class: Draw\PaymentBundle\Sonata\TaxConfigurationAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\TaxConfiguration , ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, label: Tax }
+
+    admin.draw_payment.tax_configuration_in_time:
+        class: Draw\PaymentBundle\Sonata\TaxConfigurationInTimeAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\TaxConfigurationInTime, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, show_in_dashboard: false }
