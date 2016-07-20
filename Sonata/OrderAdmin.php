@@ -37,11 +37,29 @@ class OrderAdmin extends Admin
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
-            ->add('uniqueId')
-            ->add('currencyCode')
-            ->add('clientId')
-            ->add('clientName')
-            ->add('clientEmail')
-            ->add('billingAddress.locality');
+            ->with('Order', ['class' => 'col-md-6'])
+                ->add('uniqueId')
+                ->add('currencyCode')
+            ->end()
+            ->with('Client',['class' => 'col-md-6'])
+                ->add('clientId')
+                ->add('clientName')
+                ->add('clientEmail')
+            ->end()
+            ->with('BillingAddress')
+                ->add('billingAddress.locality')
+            ->end()
+            ->with('Content')
+                ->add('items',
+                    'sonata_type_collection',
+                    [
+                        'by_reference' => false
+                    ],
+                    [
+                        'edit' => 'inline',
+                        'inline' => 'table'
+                    ]
+                )
+            ->end();
     }
 }

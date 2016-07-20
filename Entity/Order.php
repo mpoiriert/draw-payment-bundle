@@ -5,7 +5,6 @@ namespace Draw\PaymentBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use JMS\Serializer\Annotation as Serializer;
 
 /**
@@ -232,7 +231,6 @@ class Order
      * @Assert\Choice({"NEW", "IN_PROCESS", "INCOMPLETE", "PAID", "COMPLETED", "PARTIALLY_REFUNDED", "REFUNDED", "VOID", "ARCHIVED"})
      *
      * @Serializer\Expose()
-     * @Assert\Choice({"NEW"}, groups={"apply_coupon"}, payload={"ugm":{"code":"ORDER_INVALID_STATE"}}))
      */
     private $state;
 
@@ -255,7 +253,6 @@ class Order
      * @ORM\Column(type="float", nullable=true)
      *
      * @Serializer\Expose()
-     * @Assert\EqualTo(0, groups={"pay_free"}, payload={"ugm":{"code":"PAY_FREE_TOTAL_NOT_ZERO"}})
      */
     private $totalWithTaxes;
 
@@ -292,10 +289,9 @@ class Order
 
     public function __construct()
     {
-        $this->orderTaxes = new ArrayCollection();
-        $this->orderProducts = new ArrayCollection();
+        $this->taxes = new ArrayCollection();
         $this->payments = new ArrayCollection();
-        $this->orderDiscounts = new ArrayCollection();
+        $this->items = new ArrayCollection();
         $this->billingAddress = new Address();
         $this->shippingAddress = new Address();
     }
@@ -400,9 +396,8 @@ class Order
         }
 
         $this->totalWithoutTaxes = $totalBeforeTax = $this->computeTotalBeforeTax();
-        foreach ($this->getOrderTaxes() as $tax) {
-            $amountTax = round($tax->getRate() * $totalBeforeTax, 2);
-            $tax->setTotal($amountTax);
+        foreach ($this->taxes as $tax) {
+            $tax->setTotal(round($tax->getRate() * $totalBeforeTax, 2));
         }
 
         $this->totalWithTaxes = round($totalBeforeTax + $this->computesTaxesTotal(), 2);
@@ -433,12 +428,8 @@ class Order
     private function computeTotalBeforeTax()
     {
         $total = 0.0;
-        foreach ($this->getOrderProducts() as $orderProduct) {
-            $total += $orderProduct->getTotalPrice();
-        }
-
-        foreach ($this->getOrderDiscounts() as $orderDiscount) {
-            $total -= $orderDiscount->getTotalPrice();
+        foreach ($this->items as $item) {
+            $total += $item->getTotalPrice();
         }
 
         return round($total, 2);
@@ -450,8 +441,8 @@ class Order
     private function computesTaxesTotal()
     {
         $total = 0;
-        foreach ($this->getOrderTaxes() as $orderTax) {
-            $total += $orderTax->getTotal();
+        foreach ($this->taxes as $tax) {
+            $total += $tax->getTotal();
         }
 
         return round($total, 2);
@@ -499,118 +490,11 @@ class Order
     }
 
     /**
-     * @param string $culture
-     */
-    public function setCulture($culture)
-    {
-        $this->culture = $culture;
-    }
-
-    public function getCulture()
-    {
-        return $this->culture;
-    }
-
-    /**
-     * @param string $countryCode
-     */
-    public function setCountryCode($countryCode)
-    {
-        //@todo clean this up
-        if($countryCode instanceof Country) {
-            $countryCode = $countryCode->getCode();
-        }
-        $this->countryCode = $countryCode;
-    }
-
-    /**
      * @param string $regionCode
      */
     public function setRegionCode($regionCode)
     {
-        //@todo clean this up
-        if($regionCode instanceof Region) {
-            $regionCode = $regionCode->getCode();
-        }
         $this->regionCode = $regionCode;
-    }
-
-    /**
-     * @return OrderTax[]
-     */
-    public function getOrderTaxes()
-    {
-        return $this->orderTaxes;
-    }
-
-    /**
-     * @return Payment[]
-     */
-    public function getPayments()
-    {
-        return $this->payments;
-    }
-
-    /**
-     * Tax are added by the TaxService it is in charge of verified the taxes not the order.
-     * @param OrderTax $orderTax
-     */
-    public function addOrderTax(OrderTax $orderTax)
-    {
-        if (!$this->orderTaxes->contains($orderTax)) {
-            $this->orderTaxes[] = $orderTax;
-        }
-        $this->totalIsDirty = true;
-    }
-
-    /**
-     * @return ArrayCollection|OrderProduct[]
-     */
-    public function getOrderProducts()
-    {
-        return $this->orderProducts->toArray();
-    }
-
-    public function addOrderProduct(OrderProduct $orderProduct)
-    {
-        $orderProduct->setOrder($this);
-        $this->orderProducts->add($orderProduct);
-        $this->totalIsDirty = true;
-    }
-
-    public function removeOrderProduct(OrderProduct $orderProduct)
-    {
-        $this->orderProducts->removeElement($orderProduct);
-        $this->totalIsDirty = true;
-    }
-
-    /**
-     * @return OrderDiscount[]
-     */
-    public function getOrderDiscounts()
-    {
-        return $this->orderDiscounts->toArray();
-    }
-
-    public function addOrderDiscount(OrderDiscount $orderDiscount)
-    {
-        $orderDiscount->setOrder($this);
-        $this->orderDiscounts->add($orderDiscount);
-        $this->totalIsDirty = true;
-    }
-
-    public function removeOrderDiscount(OrderDiscount $orderDiscount)
-    {
-        $this->orderDiscounts->removeElement($orderDiscount);
-        $this->totalIsDirty = true;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCountryCode()
-    {
-        return $this->countryCode;
     }
 
     /**
@@ -621,14 +505,67 @@ class Order
         return $this->regionCode;
     }
 
+    /**
+     * @return Tax[]
+     */
+    public function getTaxes()
+    {
+        return $this->taxes->toArray();
+    }
+
+    /**
+     * Tax are added by the TaxService it is in charge of verified the taxes not the order.
+     * @param Tax $tax
+     */
+    public function addTax(Tax $tax)
+    {
+        if (!$this->taxes->contains($tax)) {
+            $this->taxes->add($tax);
+            $tax->setOrder($this);
+            $this->totalIsDirty = true;
+        }
+    }
+
+    /**
+     * @return Item[]
+     */
+    public function getItems()
+    {
+        return $this->items->toArray();
+    }
+
+    public function addItem(Item $item)
+    {
+        if(!$this->items->contains($item)) {
+            $this->items->add($item);
+            $item->setOrder($this);
+            $this->totalIsDirty = true;
+        }
+    }
+
+    public function removeItem(Item $item)
+    {
+        if($this->items->contains($item)) {
+            $this->items->removeElement($item);
+            $this->totalIsDirty = true;
+        }
+    }
+
+    /**
+     * @return Payment[]
+     */
+    public function getPayments()
+    {
+        return $this->payments->toArray();
+    }
+
     public function addPayment(Payment $payment)
     {
         if(!$this->payments->contains($payment)) {
             $this->payments->add($payment);
             $payment->setOrder($this);
+            $this->totalIsDirty = true;
         }
-
-        $this->totalIsDirty = true;
     }
 
     /**
@@ -655,23 +592,6 @@ class Order
     public function computeOnSave()
     {
         $this->computeTotals();
-    }
-
-    /**
-     * @Assert\Callback(groups={"create_order", "update_order"}, payload={"ugm":{"code":"DUPLICATE_PRODUCT_CODE"}})
-     */
-    public function validateUniqueOrderProduct(ExecutionContextInterface $executionContext)
-    {
-        $currentCodes = [];
-        foreach($this->orderProducts as $index => $orderProduct) {
-            if(in_array($orderProduct->getProductCode(), $currentCodes)) {
-                $executionContext->buildViolation("order.duplicate-product-code")
-                    ->atPath('orderProducts[' . $index . '].productCode')
-                    ->addViolation();
-                continue;
-            }
-            $currentCodes[] = $orderProduct->getProductCode();
-        }
     }
 
     /**

@@ -5,6 +5,18 @@ services:
         tags:
             - { name: sonata.admin, manager_type: orm, group: Payment, label: Order, icon: "<i class='fa fa-usd'></i>" }
 
+    admin.draw_payment.item:
+        class: Draw\PaymentBundle\Sonata\ItemAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\Item, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, show_in_dashboard: false }
+
+    admin.draw_payment.client:
+        class: Draw\PaymentBundle\Sonata\ClientAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\Client, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, label: Client }
+
     admin.draw_payment.tax_configuration:
         class: Draw\PaymentBundle\Sonata\TaxConfigurationAdmin
         arguments: [~, Draw\PaymentBundle\Entity\TaxConfiguration , ~]
@@ -16,3 +28,9 @@ services:
         arguments: [~, Draw\PaymentBundle\Entity\TaxConfigurationInTime, ~]
         tags:
             - { name: sonata.admin, manager_type: orm, group: Payment, show_in_dashboard: false }
+
+    admin.draw_payment.region:
+        class: Draw\PaymentBundle\Sonata\RegionAdmin
+        arguments: [~, Draw\PaymentBundle\Entity\Region, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: Payment, label: Region }

@@ -95,6 +95,7 @@ class Tax
     public function setOrder($order)
     {
         $this->order = $order;
+        $order->addTax($this);
     }
 
     /**

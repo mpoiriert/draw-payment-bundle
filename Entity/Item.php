@@ -3,6 +3,7 @@
 namespace Draw\PaymentBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Draw\PaymentBundle\Application\ProductInterface;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -46,6 +47,14 @@ class Item
      * @Assert\Type("string")
      */
     private $sku;
+
+    /**
+     * @var ProductInterface
+     *
+     * @ORM\ManyToOne(targetEntity="Draw\PaymentBundle\Application\ProductInterface")
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     */
+    private $applicationProduct;
 
     /**
      * The quantity of the item product in the order
@@ -143,5 +152,24 @@ class Item
     public function setSku($sku)
     {
         $this->sku = $sku;
+    }
+
+    /**
+     * @return ProductInterface
+     */
+    public function getApplicationProduct()
+    {
+        return $this->applicationProduct;
+    }
+
+    /**
+     * @param ProductInterface $applicationProduct
+     */
+    public function setApplicationProduct(ProductInterface $applicationProduct = null)
+    {
+        $this->applicationProduct = $applicationProduct;
+        if($applicationProduct) {
+            $this->setSku($applicationProduct->getApplicationSku());
+        }
     }
 }
