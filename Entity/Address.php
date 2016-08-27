@@ -24,6 +24,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=2, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $countryCode;
 
@@ -36,6 +40,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $administrativeArea;
 
@@ -48,9 +56,12 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $locality;
-
 
     /**
      * The dependent locality (i.e neighbourhood).
@@ -65,7 +76,6 @@ class Address implements AddressInterface
      */
     private $dependentLocality;
 
-
     /**
      * The postal code.
      *
@@ -74,6 +84,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $postalCode;
 
@@ -94,6 +108,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $addressLine1;
 
@@ -103,6 +121,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $addressLine2;
 
@@ -112,6 +134,10 @@ class Address implements AddressInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $recipient;
 
@@ -121,6 +147,10 @@ class Address implements AddressInterface
      * @return string
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("string")
+     * @Serializer\Groups({"draw-order:create", "draw-order:update", "draw-order:read"})
      */
     private $organization;
 

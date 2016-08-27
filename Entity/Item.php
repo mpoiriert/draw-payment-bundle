@@ -53,6 +53,9 @@ class Item
      *
      * @ORM\ManyToOne(targetEntity="Draw\PaymentBundle\Application\ProductInterface")
      * @ORM\JoinColumn(onDelete="SET NULL")
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:create", "draw-item:read", "draw-item:update"})
      */
     private $applicationProduct;
 
@@ -62,6 +65,10 @@ class Item
      * @ORM\Column(type="integer")
      * @Assert\NotNull()
      * @Assert\Type("int")
+     * @Assert\GreaterThan(value=0)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:create", "draw-item:read", "draw-item:update"})
      */
     private $quantity;
 

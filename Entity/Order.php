@@ -4,6 +4,8 @@ namespace Draw\PaymentBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Draw\DrawBundle\Security\OwnedInterface;
+use Draw\DrawBundle\Security\OwnerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as Serializer;
 
@@ -22,7 +24,7 @@ use JMS\Serializer\Annotation as Serializer;
  * @ORM\HasLifecycleCallbacks()
  * @Serializer\ExclusionPolicy("all")
  */
-class Order
+class Order implements OwnedInterface
 {
     /**
      * When the order is created but not sent to any payment provider
@@ -75,6 +77,7 @@ class Order
      * @ORM\GeneratedValue(strategy="AUTO")
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $id;
 
@@ -86,6 +89,7 @@ class Order
      * @ORM\Column(type="string", length=50)
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $uniqueId;
 
@@ -98,6 +102,7 @@ class Order
      * @Assert\NotBlank()
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $currencyCode;
 
@@ -123,6 +128,7 @@ class Order
      * @Assert\Email()
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
      */
     private $clientEmail;
 
@@ -136,6 +142,7 @@ class Order
      * @Assert\Type("string")
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
      */
     private $clientName;
 
@@ -275,6 +282,10 @@ class Order
      * @var Address
      *
      * @ORM\Embedded(class = Address::class)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type(Address::class)
+     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
      */
     private $billingAddress;
 
@@ -284,6 +295,10 @@ class Order
      * @var Address
      *
      * @ORM\Embedded(class = Address::class)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type(Address::class)
+     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
      */
     private $shippingAddress;
 
@@ -591,6 +606,9 @@ class Order
      */
     public function computeOnSave()
     {
+        if(is_null($this->uniqueId)) {
+            $this->uniqueId = uniqid();
+        }
         $this->computeTotals();
     }
 
@@ -625,6 +643,12 @@ class Order
     {
         $this->shippingAddress = $shippingAddress;
     }
+
+    public function isOwnedBy(OwnerInterface $possibleOwner)
+    {
+        return $possibleOwner->getOwnerId() == $this->clientId;
+    }
+
 
     public function __toString()
     {
