@@ -17,6 +17,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder->root('draw_payment_bundle')
             ->children()
                 ->scalarNode('stripe_api_key')->isRequired()->end()
+                ->scalarNode('stripe_publishable_key')->isRequired()->end()
             ->end();
 
         return $treeBuilder;
