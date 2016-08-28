@@ -122,13 +122,13 @@ class ItemsController extends Controller
      *
      * @Swagger\Tag(name="DrawItems")
      *
-     * @Rest\Get("/draw-items/{id}", name="draw_item_delete")
+     * @Rest\Delete("/draw-items/{id}", name="draw_item_delete")
      *
      * @Rest\View(statusCode=204)
      *
      * @ParamConverter(name="entity")
      *
-     * @Security("is_granted('OWN', entity)")
+     * @Security("is_granted('OWN', entity.getOrder())")
      *
      * @param Entity $entity
      */

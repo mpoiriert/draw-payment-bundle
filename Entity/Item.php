@@ -21,6 +21,9 @@ class Item
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue()
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:read", "draw-order:read"})
      */
     private $id;
 
@@ -33,6 +36,9 @@ class Item
      *
      * @Assert\NotNull()
      * @Assert\Type(Order::class)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:create", "draw-item:read"})
      */
     private $order;
 
@@ -45,6 +51,8 @@ class Item
      *
      * @Assert\NotNull()
      * @Assert\Type("string")
+     *
+     * @Serializer\Groups({"draw-item:read", "draw-order:read"})
      */
     private $sku;
 
@@ -55,7 +63,8 @@ class Item
      * @ORM\JoinColumn(onDelete="SET NULL")
      *
      * @Serializer\Expose()
-     * @Serializer\Groups({"draw-item:create", "draw-item:read", "draw-item:update"})
+     * @Serializer\Groups({"draw-item:create", "draw-order:create"})
+     * @Serializer\Accessor(setter="setApplicationProduct")
      */
     private $applicationProduct;
 
@@ -68,7 +77,7 @@ class Item
      * @Assert\GreaterThan(value=0)
      *
      * @Serializer\Expose()
-     * @Serializer\Groups({"draw-item:create", "draw-item:read", "draw-item:update"})
+     * @Serializer\Groups({"draw-item:create", "draw-item:read", "draw-item:update", "draw-order:read", "draw-order:create"})
      */
     private $quantity;
 
@@ -78,6 +87,9 @@ class Item
      * @ORM\Column(type="float")
      * @Assert\NotNull()
      * @Assert\Type("float")
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:read", "draw-order:read", "draw-order:create"})
      */
     private $unitPrice;
 
@@ -172,11 +184,10 @@ class Item
     /**
      * @param ProductInterface $applicationProduct
      */
-    public function setApplicationProduct(ProductInterface $applicationProduct = null)
+    public function setApplicationProduct(ProductInterface $applicationProduct)
     {
         $this->applicationProduct = $applicationProduct;
-        if($applicationProduct) {
-            $this->setSku($applicationProduct->getApplicationSku());
-        }
+        $this->setSku($applicationProduct->getApplicationSku());
+        $this->setUnitPrice($applicationProduct->getUnitPrice());
     }
 }

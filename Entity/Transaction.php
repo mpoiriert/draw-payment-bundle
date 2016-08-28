@@ -151,6 +151,7 @@ class Transaction
     public function setPayment(Payment $payment)
     {
         $this->payment = $payment;
+        $payment->addTransaction($this);
     }
 
     /**

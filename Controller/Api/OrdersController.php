@@ -39,6 +39,7 @@ class OrdersController extends Controller
      */
     public function createAction(Entity $entity)
     {
+        $entity->setClientId($this->getUser()->getId());
         $entity->setCurrencyCode('CAD');
         return $this->persistAndFlush($entity);
     }
@@ -111,10 +112,8 @@ class OrdersController extends Controller
     public function listAction()
     {
         return $this->createOrmQueryBuilder("DrawPaymentBundle:Order", "entity")
-            //->where()
-            //->setParameter()
+            ->andWhere('entity.clientId = :clientId')->setParameter('clientId', $this->getUser()->getId())
             ->getQuery()
-            //->setMaxResults(50)
             ->getResult();
     }
 

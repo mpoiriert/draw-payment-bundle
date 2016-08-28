@@ -49,6 +49,9 @@ class Payment
      * @ORM\JoinColumn(name="order_id", onDelete="CASCADE", nullable=false)
      *
      * @Assert\NotNull()
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-payment:create", "draw-payment:read"})
      */
     private $order;
 
@@ -63,6 +66,7 @@ class Payment
      * @Assert\NotNull()
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-payment:read"})
      */
     private $state;
 
@@ -75,6 +79,7 @@ class Payment
      * @Assert\NotNull()
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-payment:create", "draw-payment:read"})
      */
     private $gatewayName;
 
@@ -98,6 +103,7 @@ class Payment
      * @Assert\NotNull()
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-payment:read"})
      */
     private $amount;
 
@@ -137,6 +143,17 @@ class Payment
      * )
      */
     private $transactions;
+
+    /**
+     * Product(s) from the order
+     * @var array
+     *
+     * @ORM\Column(type="json_array")
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-payment:create"})
+     */
+    private $data = [];
 
     public function __construct()
     {
@@ -273,10 +290,26 @@ class Payment
      */
     public function addTransaction(Transaction $transaction)
     {
-        $transaction->setPayment($this);
-        if($this->transactions->contains($transaction)) {
+        if(!$this->transactions->contains($transaction)) {
             $this->transactions->add($transaction);
+            $transaction->setPayment($this);
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param array $data
+     */
+    public function setData(array $data)
+    {
+        $this->data = $data;
     }
 
     public function __toString()

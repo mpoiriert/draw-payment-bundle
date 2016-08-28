@@ -4,6 +4,7 @@ namespace Draw\PaymentBundle\Controller\Api;
 
 use Draw\PaymentBundle\Entity\Payment as Entity;
 use Draw\DrawBundle\Controller\DoctrineControllerTrait;
+use Draw\PaymentBundle\Entity\Transaction;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -39,7 +40,38 @@ class PaymentsController extends Controller
      */
     public function createAction(Entity $entity)
     {
-        return $this->persistAndFlush($entity);
+        $entity->setState(Entity::STATE_PENDING);
+        $entity->getOrder()->computeTotals();
+        $entity->setAmount($entity->getOrder()->getTotal());
+        $this->persistAndFlush($entity);
+
+        $order = $entity->getOrder();
+
+        \Stripe\Stripe::setApiKey($this->container->getParameter('draw_payment.stripe_api_key'));
+
+        $transaction = new Transaction();
+        $transaction->setState(Transaction::STATE_PENDING);
+        $transaction->setType('pay');
+        $transaction->setRequestData([
+            "amount" => $order->getTotal(),
+            "currency" => strtolower($order->getCurrencyCode()),
+            "source" => $entity->getData()['token'],
+            "description" => "Example charge"
+            ]);
+
+        $entity->addTransaction($transaction);
+        $this->persistAndFlush($transaction);
+
+        $result = \Stripe\Charge::create($transaction->getRequestData());
+
+        if($result['status'] == 'succeeded') {
+            $transaction->setResponseData(\Stripe\Util\Util::convertStripeObjectToArray($result));
+            $transaction->setState(Transaction::STATE_SUCCESS);
+            $entity->setState(Entity::STATE_SUCCESS);
+            $this->flushAll($transaction);
+        }
+
+        return $entity;
     }
 
     /**
@@ -122,7 +154,7 @@ class PaymentsController extends Controller
      *
      * @Swagger\Tag(name="DrawPayments")
      *
-     * @Rest\Get("/draw-payments/{id}", name="draw_payment_delete")
+     * @Rest\Delete("/draw-payments/{id}", name="draw_payment_delete")
      *
      * @Rest\View(statusCode=204)
      *

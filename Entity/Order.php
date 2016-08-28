@@ -8,6 +8,7 @@ use Draw\DrawBundle\Security\OwnedInterface;
 use Draw\DrawBundle\Security\OwnerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as Serializer;
+use DateTime;
 
 /**
  * @ORM\Entity(repositoryClass="Doctrine\ORM\EntityRepository")
@@ -77,9 +78,24 @@ class Order implements OwnedInterface
      * @ORM\GeneratedValue(strategy="AUTO")
      *
      * @Serializer\Expose()
-     * @Serializer\Groups({"draw-order:read"})
+     * @Serializer\Groups(
+     *     {"draw-order:read", "draw-item:create", "draw-item:read", "draw-payment:create", "draw-payment:read"}
+     *     )
      */
     private $id;
+
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     *
+     * @Serializer\Expose()
+     * @Serializer\Type("DateTime<'U'>")
+     * @Serializer\Groups(
+     *     {"draw-order:read"}
+     *     )
+     */
+    private $createdAt;
 
     /**
      * The unique id to identify the order not base on the auto increment
@@ -196,6 +212,10 @@ class Order implements OwnedInterface
      * )
      *
      * @Assert\Valid()
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read", "draw-order:create"})
+     * @Serializer\Accessor(setter="setItems")
      */
     private $items;
 
@@ -260,6 +280,7 @@ class Order implements OwnedInterface
      * @ORM\Column(type="float", nullable=true)
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $totalWithTaxes;
 
@@ -285,7 +306,6 @@ class Order implements OwnedInterface
      *
      * @Serializer\Expose()
      * @Serializer\Type(Address::class)
-     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
      */
     private $billingAddress;
 
@@ -542,6 +562,17 @@ class Order implements OwnedInterface
     }
 
     /**
+     * @param $items
+     */
+    public function setItems($items)
+    {
+        $this->items = $items;
+        foreach($this->items as $item) {
+            $item->setOrder($this);
+        }
+    }
+
+    /**
      * @return Item[]
      */
     public function getItems()
@@ -609,6 +640,10 @@ class Order implements OwnedInterface
         if(is_null($this->uniqueId)) {
             $this->uniqueId = uniqid();
         }
+        if(is_null($this->createdAt)) {
+            $this->createdAt = new DateTime();
+        }
+
         $this->computeTotals();
     }
 
@@ -649,6 +684,21 @@ class Order implements OwnedInterface
         return $possibleOwner->getOwnerId() == $this->clientId;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param DateTime $createdAt
+     */
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+    }
 
     public function __toString()
     {
