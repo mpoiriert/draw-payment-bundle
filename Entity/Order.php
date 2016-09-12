@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Draw\DrawBundle\Security\OwnedInterface;
 use Draw\DrawBundle\Security\OwnerInterface;
+use Draw\PaymentBundle\Application\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as Serializer;
 use DateTime;
@@ -123,6 +124,16 @@ class Order implements OwnedInterface
     private $currencyCode;
 
     /**
+     * @var UserInterface
+     *
+     * @ORM\ManyToOne(targetEntity="Draw\PaymentBundle\Application\UserInterface")
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     *
+     * @Serializer\Accessor(setter="setApplicationUser")
+     */
+    private $applicationUser;
+
+    /**
      * The client id for this order.
      *
      * There is not relation on this since we don't want a cascade delete for order
@@ -132,6 +143,7 @@ class Order implements OwnedInterface
      * @ORM\Column(type="integer", nullable=true)
      *
      * @Serializer\Expose()
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $clientId;
 
@@ -144,7 +156,7 @@ class Order implements OwnedInterface
      * @Assert\Email()
      *
      * @Serializer\Expose()
-     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $clientEmail;
 
@@ -158,7 +170,7 @@ class Order implements OwnedInterface
      * @Assert\Type("string")
      *
      * @Serializer\Expose()
-     * @Serializer\Groups({"draw-order:read", "draw-order:update", "draw-order:create"})
+     * @Serializer\Groups({"draw-order:read"})
      */
     private $clientName;
 
@@ -698,6 +710,27 @@ class Order implements OwnedInterface
     public function setCreatedAt($createdAt)
     {
         $this->createdAt = $createdAt;
+    }
+
+    /**
+     * @return UserInterface
+     */
+    public function getApplicationUser()
+    {
+        return $this->applicationUser;
+    }
+
+    /**
+     * @param UserInterface $applicationUser
+     */
+    public function setApplicationUser($applicationUser)
+    {
+        $this->applicationUser = $applicationUser;
+        if($applicationUser) {
+            $this->setClientId($applicationUser->getApplicationClientReferenceId());
+            $this->setClientEmail($applicationUser->getApplicationClientName());
+            $this->setClientName($applicationUser->getApplicationClientName());
+        }
     }
 
     public function __toString()

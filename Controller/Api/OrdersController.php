@@ -39,7 +39,7 @@ class OrdersController extends Controller
      */
     public function createAction(Entity $entity)
     {
-        $entity->setClientId($this->getUser()->getId());
+        $entity->setApplicationUser($this->getUser());
         $entity->setCurrencyCode('CAD');
         return $this->persistAndFlush($entity);
     }

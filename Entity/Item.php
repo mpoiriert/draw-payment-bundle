@@ -4,6 +4,7 @@ namespace Draw\PaymentBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Draw\PaymentBundle\Application\ProductInterface;
+use Draw\PaymentBundle\Application\ItemDataInterface;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -67,6 +68,17 @@ class Item
      * @Serializer\Accessor(setter="setApplicationProduct")
      */
     private $applicationProduct;
+
+    /**
+     * @var ItemDataInterface
+     *
+     * @ORM\ManyToOne(targetEntity="Draw\PaymentBundle\Application\ItemDataInterface", cascade={"persist"})
+     *
+     * @Serializer\Expose()
+     * @Serializer\Groups({"draw-item:create", "draw-order:create", "draw-item:update"})
+     * @Serializer\Accessor(setter="setItemData")
+     */
+    private $itemData;
 
     /**
      * The quantity of the item product in the order
@@ -189,5 +201,24 @@ class Item
         $this->applicationProduct = $applicationProduct;
         $this->setSku($applicationProduct->getApplicationSku());
         $this->setUnitPrice($applicationProduct->getUnitPrice());
+    }
+
+    /**
+     * @return ItemDataInterface
+     */
+    public function getItemData()
+    {
+        return $this->itemData;
+    }
+
+    /**
+     * @param ItemDataInterface $itemData
+     */
+    public function setItemData(ItemDataInterface $itemData = null)
+    {
+        $this->itemData = $itemData;
+        if($itemData) {
+            $itemData->setOrderItem($this);
+        }
     }
 }
