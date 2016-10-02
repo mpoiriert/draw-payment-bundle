@@ -10,6 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Draw\Swagger\Schema as Swagger;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 class PaymentsController extends Controller
 {
@@ -52,23 +53,29 @@ class PaymentsController extends Controller
         $transaction = new Transaction();
         $transaction->setState(Transaction::STATE_PENDING);
         $transaction->setType('pay');
-        $transaction->setRequestData([
-            "amount" => $order->getTotal(),
-            "currency" => strtolower($order->getCurrencyCode()),
-            "source" => $entity->getData()['token'],
-            "description" => "Example charge"
-            ]);
+        $transaction->setRequestData(
+            [
+                "amount" => $order->getTotal(),
+                "currency" => strtolower($order->getCurrencyCode()),
+                "source" => $entity->getData()['token'],
+                "description" => "Example charge"
+            ]
+        );
 
         $entity->addTransaction($transaction);
         $this->persistAndFlush($transaction);
 
         $result = \Stripe\Charge::create($transaction->getRequestData());
 
-        if($result['status'] == 'succeeded') {
+        if ($result['status'] == 'succeeded') {
             $transaction->setResponseData(\Stripe\Util\Util::convertStripeObjectToArray($result));
             $transaction->setState(Transaction::STATE_SUCCESS);
             $entity->setState(Entity::STATE_SUCCESS);
             $this->flushAll($transaction);
+            $this->get('event_dispatcher')->dispatch(
+                'draw.payment.success',
+                new GenericEvent($entity)
+            );
         }
 
         return $entity;
