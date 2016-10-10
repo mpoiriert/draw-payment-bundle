@@ -728,7 +728,7 @@ class Order implements OwnedInterface
         $this->applicationUser = $applicationUser;
         if($applicationUser) {
             $this->setClientId($applicationUser->getApplicationClientReferenceId());
-            $this->setClientEmail($applicationUser->getApplicationClientName());
+            $this->setClientEmail($applicationUser->getApplicationClientEmail());
             $this->setClientName($applicationUser->getApplicationClientName());
         }
     }
